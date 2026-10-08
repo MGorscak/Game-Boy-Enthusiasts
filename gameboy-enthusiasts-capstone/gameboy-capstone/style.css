@@ -1,0 +1,770 @@
+/* =========================================================
+   Game Boy Enthusiasts – Production CSS Architecture
+   Extended for production-ready responsive layout system
+   (builds on Module 2 layered architecture – does not replace it)
+
+   MEDIA & TYPOGRAPHY OPTIMIZATION NOTES
+   -------------------------------------
+   Part 6: Typography system documented in tokens (type scale,
+           measure, line-height, fallback stack).
+   Part 7: Font loading – system fonts only (no @font-face,
+           zero network cost, no FOIT/FOUT, no font-related CLS).
+   Part 8: Layout stability – aspect-ratio on media regions
+           + width/height on <img> elements prevent CLS.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   LAYER ORDER (Cascade Strategy)
+   1. reset
+   2. tokens
+   3. base
+   4. layout
+   5. components
+   6. utilities
+   7. states
+   8. overrides
+   9. print
+   --------------------------------------------------------- */
+
+@layer reset, tokens, base, layout, components, utilities, states, overrides, print;
+
+
+/* ========== 1. RESET ========== */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-size: 100%; /* respects user font-size preferences */
+    scroll-behavior: smooth;
+  }
+
+  img {
+    max-inline-size: 100%;
+    block-size: auto;
+    display: block;
+  }
+
+  ul, ol {
+    list-style: none;
+  }
+
+  button, input, textarea, select {
+    font: inherit;
+  }
+}
+
+
+/* ========== 2. DESIGN TOKENS ========== */
+@layer tokens {
+  :root {
+    /* Color – Game Boy nostalgia + modern readability */
+    --color-gb-light:   #9BBC0F;
+    --color-gb:         #8BAC0F;
+    --color-gb-dark:    #306230;
+    --color-gb-darker:  #0F380F;
+
+    --color-primary:        var(--color-gb-dark);
+    --color-primary-hover:  var(--color-gb-darker);
+    --color-accent:         var(--color-gb-light);
+
+    --color-bg:             #f4f6f0;
+    --color-bg-card:        #ffffff;
+    --color-bg-nav:         var(--color-gb-darker);
+    --color-text:           #1a1a1a;
+    --color-text-muted:     #4a4a4a;
+    --color-text-on-dark:   #f0f4e8;
+    --color-border:         #c8d0b8;
+
+    /* Focus */
+    --color-focus:          var(--color-gb-light);
+    --focus-ring:           0 0 0 3px rgba(155, 188, 15, 0.45);
+
+    /*
+      TYPOGRAPHY SYSTEM (Parts 6 & 7)
+      --------------------------------
+      Font stack: system-ui first → zero network cost, instant render,
+      no FOIT/FOUT, no Cumulative Layout Shift from fonts.
+      Fallback chain covers Windows, macOS, iOS, Android, Linux.
+      Licensing: N/A (system fonts only). No @font-face / no web fonts.
+
+      Type scale:
+        --fs-100  0.875rem   small meta / captions
+        --fs-200  1rem       body (base)
+        --fs-300  1.125rem   lead text
+        --fs-400  1.25rem    h3
+      Headings use clamp() for fluid scaling.
+      Line length: --measure 65ch (ideal 45–75ch range)
+      Line height: 1.6 body / 1.25 headings
+      Spacing follows the same modular scale as layout tokens.
+    */
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-size-base: 1rem;
+    --fs-100: 0.875rem;
+    --fs-200: 1rem;
+    --fs-300: 1.125rem;
+    --fs-400: 1.25rem;
+    --line-height-body: 1.6;
+    --line-height-heading: 1.25;
+
+    /* Spacing scale (logical, fluid-friendly) */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 1rem;
+    --space-4: 1.5rem;
+    --space-5: 2rem;
+    --space-6: 3rem;
+    --space-7: 4rem;
+
+    /* Shape */
+    --radius: 6px;
+    --radius-lg: 10px;
+
+    /* Layout – flexible constraints */
+    --max-width: 68rem;          /* content-driven upper bound */
+    --measure: 65ch;             /* comfortable reading measure */
+    --gutter: clamp(1rem, 3vw, 1.5rem);
+
+    /* Component-specific tokens */
+    --nav-height: 3.5rem;
+    --card-gap: var(--space-4);
+    --card-min: 16rem;           /* intrinsic minimum for auto-fit grids */
+  }
+
+  /* Preference: color scheme (dark mode tokens) */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg:             #121a12;
+      --color-bg-card:        #1c261c;
+      --color-bg-nav:         #0a120a;
+      --color-text:           #e8f0d8;
+      --color-text-muted:     #a8b898;
+      --color-border:         #2a3a2a;
+      --color-text-on-dark:   #e8f0d8;
+      --focus-ring:           0 0 0 3px rgba(155, 188, 15, 0.6);
+    }
+  }
+}
+
+
+/* ========== 3. BASE ========== */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-body);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    min-block-size: 100vh;
+    min-block-size: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, h4 {
+    line-height: var(--line-height-heading);
+    font-weight: 650;
+    color: var(--color-gb-darker);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    h1, h2, h3, h4 {
+      color: var(--color-gb-light);
+    }
+  }
+
+  h1 { font-size: clamp(1.75rem, 4vw + 1rem, 2.25rem); }
+  h2 { font-size: clamp(1.25rem, 2vw + 0.75rem, 1.6rem); }
+  h3 { font-size: 1.25rem; }
+
+  p {
+    margin-block-end: var(--space-3);
+    max-inline-size: var(--measure);
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+}
+
+
+/* ========== 4. LAYOUT ========== */
+@layer layout {
+  /* ----- 1. Responsive layout foundation -----
+     wrappers, sections, spacing, page-level layout
+     use logical properties and flexible constraints */
+  .container {
+    width: 100%;
+    max-inline-size: var(--max-width);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* Page-level shell */
+  main {
+    flex: 1;
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  /* Narrower measure for long-form content pages */
+  main .container--narrow {
+    max-inline-size: 42rem;
+  }
+
+  /* Default main content still constrained for readability */
+  main > .container {
+    max-inline-size: min(var(--max-width), 48rem);
+  }
+
+  /* Database / grid pages need the full outer container width */
+  main > .container--wide {
+    max-inline-size: var(--max-width);
+  }
+
+  /* Spacing helpers (logical properties) */
+  main h1 {
+    margin-block-end: var(--space-3);
+  }
+
+  main p {
+    margin-block-end: var(--space-4);
+  }
+
+  main .btn {
+    margin-block-end: var(--space-5);
+  }
+
+  /* ----- 2. Advanced Grid pattern A: hero / media + content -----
+     Intrinsic sizing with minmax() + auto-fit */
+  .hero-grid {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+    align-items: center;
+    margin-block: var(--space-4);
+  }
+
+  .hero-grid__media {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-border);
+  }
+
+  /*
+    LAYOUT STABILITY (Part 8)
+    aspect-ratio reserves the exact space before the image loads.
+    Combined with width/height attributes on the <img>, this
+    eliminates avoidable Cumulative Layout Shift (CLS).
+  */
+  .hero-grid__media img {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+  }
+
+  .hero-grid__content {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  /* ----- 2. Advanced Grid pattern B: feature highlights -----
+     auto-fill + minmax + content-driven columns */
+  .feature-grid {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fill, minmax(min(14rem, 100%), 1fr));
+    margin-block: var(--space-5);
+  }
+
+  .feature {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .feature h2,
+  .feature h3 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+
+  .feature p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    max-inline-size: none;
+  }
+}
+
+
+/* ========== 5. COMPONENTS ========== */
+@layer components {
+
+  /* ----- Skip link (keyboard / screen reader) ----- */
+  .skip-link {
+    position: absolute;
+    inset-block-start: -100%;
+    inset-inline-start: var(--gutter);
+    z-index: 1000;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-accent);
+    color: var(--color-gb-darker);
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: var(--radius);
+    border: 2px solid var(--color-gb-darker);
+  }
+
+  .skip-link:focus {
+    inset-block-start: var(--space-2);
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  .skip-link:focus-visible {
+    inset-block-start: var(--space-2);
+  }
+
+  /* Content list (About page) */
+  .content-list {
+    list-style: disc;
+    padding-inline-start: 1.25rem;
+    margin-block-end: var(--space-4);
+    max-inline-size: var(--measure);
+  }
+
+  .content-list li {
+    margin-block-end: var(--space-2);
+  }
+
+  .form-instructions {
+    font-size: var(--fs-100);
+    color: var(--color-text-muted);
+    margin-block-end: var(--space-4);
+  }
+
+
+  /* ----- Navigation ----- */
+  .navbar {
+    background: var(--color-bg-nav);
+    color: var(--color-text-on-dark);
+    padding-block: var(--space-3);
+  }
+
+  .navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    max-inline-size: var(--max-width);
+  }
+
+  .nav-logo {
+    position: absolute;
+    inset-inline-start: var(--gutter);
+  }
+
+  .nav-logo a {
+    color: var(--color-text-on-dark);
+    font-weight: 700;
+    font-size: 1.15rem;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-1) var(--space-2);
+  }
+
+  .nav-links a {
+    color: var(--color-text-on-dark);
+    text-decoration: none;
+    font-weight: 500;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    white-space: nowrap;
+  }
+
+  /* ----- 5. Content-driven breakpoint -----
+     Observed: logo + four nav items start to collide around 36rem
+     (depends on font size / zoom). Not labelled "mobile". */
+  @media (max-width: 36rem) {
+    .navbar .container {
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .nav-logo {
+      position: static;
+      inset-inline-start: auto;
+    }
+
+    .nav-links {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* ----- Button ----- */
+  .btn {
+    display: inline-block;
+    padding: 0.7rem 1.4rem;
+    font-weight: 600;
+    color: var(--color-gb-darker);
+    background: var(--color-accent);
+    border: 2px solid transparent;
+    border-radius: var(--radius);
+    text-decoration: none;
+    cursor: pointer;
+    min-block-size: 44px;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  /* ----- Card grid (Database) – advanced Grid #1 continued -----
+     Intrinsic, content-driven: auto-fit + minmax so columns appear
+     only when there is enough room for the minimum card size.
+     No device labels; the browser decides from available space. */
+  .card-grid {
+    display: grid;
+    gap: var(--card-gap);
+    margin-block-start: var(--space-4);
+    /* Advanced Grid: auto-fit + minmax + min() overflow guard */
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(var(--card-min), 100%), 1fr)
+    );
+    /* Containment context for container queries on the component */
+    container-type: inline-size;
+    container-name: card-grid;
+  }
+
+  /* Card
+     Structure: media (auto) + body (1fr).
+     Body is itself a grid; when the browser supports subgrid we
+     let the body inherit a multi-row track list from the card so
+     title / meta / description share consistent row sizing if the
+     card defines matching tracks. */
+  .card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  /*
+    LAYOUT STABILITY (Part 8)
+    Fixed aspect-ratio on the media container + width/height on
+    the <img> prevents content jumping while images load.
+  */
+  .card__media {
+    aspect-ratio: 4 / 3;
+    background: #e8ecd8;
+    overflow: hidden;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .card__media {
+      background: #1a241a;
+    }
+  }
+
+  .card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card__body {
+    padding: var(--space-3);
+    display: grid;
+    gap: var(--space-2);
+    /* Internal tracks: title | meta | description */
+    grid-template-rows: auto auto 1fr;
+  }
+
+  /* ----- 3. Subgrid -----
+     When supported, a card that spans multiple parent rows can
+     pull those tracks inward so nested content stays aligned.
+     Here we demonstrate the feature on the body by optionally
+     inheriting from a richer card track list. */
+  @supports (grid-template-rows: subgrid) {
+    .card {
+      /* three tracks available for a body that wants to subgrid */
+      grid-template-rows: auto auto auto 1fr;
+    }
+    .card__media {
+      grid-row: 1;
+    }
+    .card__body {
+      grid-row: 2 / -1;
+      grid-template-rows: subgrid;
+      /* body now shares the remaining tracks with siblings if any */
+    }
+  }
+
+  .card__title {
+    font-size: 1.15rem;
+    margin: 0;
+  }
+
+  .card__meta {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .card__body > p:last-child {
+    margin: 0;
+  }
+
+  /* ----- 7. Feature / fallback strategy for subgrid -----
+     Base styles above already provide a solid flex-like grid
+     without subgrid. The @supports block only enhances alignment
+     when the feature exists; no extra fallback rules required. */
+
+  /* ----- 4. Container-query component -----
+     The card itself adapts to the width of its grid container.
+     Narrow → keep stacked; wider → side-by-side media + body. */
+  @container card-grid (min-width: 40rem) {
+    .card {
+      grid-template-columns: minmax(8rem, 40%) 1fr;
+      grid-template-rows: auto;
+      align-items: stretch;
+    }
+
+    .card__media {
+      aspect-ratio: auto;
+      block-size: 100%;
+      min-block-size: 8rem;
+      grid-row: auto;
+    }
+
+    .card__body {
+      grid-row: auto;
+      grid-template-rows: auto auto 1fr;
+      align-content: start;
+    }
+  }
+
+/* Fallback note for container queries:
+   If @container / container-type is unsupported, the base
+   auto-fit + minmax grid still produces a solid responsive
+   card layout. The horizontal card variant simply stays inactive.
+   (No extra rules needed — the intrinsic grid already works.) */
+  /* ----- Form Field ----- */
+  .form-group {
+    margin-block-end: var(--space-4);
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-block-end: var(--space-2);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg-card);
+    color: var(--color-text);
+  }
+
+  textarea {
+    min-block-size: 140px;
+    resize: vertical;
+  }
+
+  /* Contact form constrained measure */
+  form {
+    max-inline-size: 32rem;
+  }
+
+  /* ----- Footer ----- */
+  .site-footer {
+    background: var(--color-bg-nav);
+    color: var(--color-text-on-dark);
+    padding-block: var(--space-4);
+    margin-block-start: auto;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  /* ----- Callout / Alert ----- */
+  .alert {
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    margin-block-end: var(--space-4);
+    border: 1px solid transparent;
+  }
+
+  .alert--success {
+    background: #e8f5d0;
+    border-color: var(--color-gb);
+    color: var(--color-gb-darker);
+  }
+
+  .alert--error {
+    background: #fdecea;
+    border-color: #c0392b;
+    color: #922b21;
+  }
+}
+
+
+/* ========== 6. UTILITIES ========== */
+@layer utilities {
+  .text-center   { text-align: center; }
+  .mt-3          { margin-block-start: var(--space-3); }
+  .mt-4          { margin-block-start: var(--space-4); }
+  .mb-3          { margin-block-end: var(--space-3); }
+  .mb-4          { margin-block-end: var(--space-4); }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+
+/* ========== 7. STATES ========== */
+@layer states {
+  /* Hover */
+  .nav-links a:hover,
+  .btn:hover {
+    background: var(--color-gb);
+    color: var(--color-gb-darker);
+  }
+
+  .card:hover {
+    box-shadow: 0 6px 18px rgba(15, 56, 15, 0.12);
+    transform: translateY(-2px);
+  }
+
+  /* Focus-visible (keyboard) */
+  a:focus-visible,
+  .btn:focus-visible,
+  .nav-links a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  /* Current page */
+  .nav-links a.current {
+    background: var(--color-gb);
+    color: var(--color-gb-darker);
+    font-weight: 600;
+  }
+
+  /* Invalid form fields */
+  input:invalid:not(:placeholder-shown),
+  textarea:invalid:not(:placeholder-shown) {
+    border-color: #c0392b;
+  }
+
+  /* ----- 6. User preferences ----- */
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    .btn,
+    .card {
+      transition: none;
+    }
+
+    .card:hover {
+      transform: none;
+    }
+  }
+
+  /* Higher contrast */
+  @media (prefers-contrast: more) {
+    :root {
+      --color-border: #000;
+      --focus-ring: 0 0 0 3px #000;
+    }
+
+    .card,
+    .feature,
+    input,
+    textarea {
+      border-width: 2px;
+    }
+
+    .btn {
+      border: 2px solid var(--color-gb-darker);
+    }
+  }
+}
+
+
+/* ========== 8. OVERRIDES (rare, high-specificity escapes) ========== */
+@layer overrides {
+  /* Reserved for third-party or emergency overrides */
+}
+
+
+/* ========== 9. PRINT ========== */
+@layer print {
+  @media print {
+    .navbar,
+    .site-footer,
+    .btn,
+    .no-print {
+      display: none !important;
+    }
+
+    body {
+      background: white;
+      color: black;
+      font-size: 12pt;
+    }
+
+    .card,
+    .feature {
+      break-inside: avoid;
+      border: 1px solid #999;
+      box-shadow: none;
+      margin-block-end: 1rem;
+    }
+
+    a {
+      text-decoration: none;
+      color: black;
+    }
+
+    main {
+      padding: 0;
+    }
+  }
+}

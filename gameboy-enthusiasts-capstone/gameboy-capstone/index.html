@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home – Game Boy Enthusiasts</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!--
+  ============================================================
+  ASSET INVENTORY & PROVENANCE (Part 1)
+  ============================================================
+  Images:
+  - Hero image (classic Game Boy)
+    Source: Unsplash – https://unsplash.com/photos/photo-1703319952271-a72d8995c336
+    License: Unsplash License (free for commercial & personal use, no attribution required)
+    Local file: assets/photo-1703319952271-a72d8995c336.jpg
+    Format: JPEG
+    Purpose: Hero / primary visual – informative
+
+  Fonts:
+  - System font stack only (see style.css)
+    No web fonts loaded → zero extra network requests, no FOIT/FOUT,
+    no layout shift from fonts.
+    Licensing: N/A (system fonts)
+
+  SVG / Audio / Video / Embeds:
+  - None used on this page.
+  ============================================================
+  -->
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="navbar">
+    <div class="container">
+      <div class="nav-logo">
+        <a href="index.html">Game Boy Enthusiasts</a>
+      </div>
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html" class="current" aria-current="page">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="database.html">Database</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="container container--wide">
+      <section class="hero-grid" aria-labelledby="hero-heading">
+        <div class="hero-grid__media">
+          <img
+            src="assets/photo-1703319952271-a72d8995c336.jpg"
+            alt="Classic gray original Game Boy handheld console resting on a surface"
+            width="800"
+            height="500"
+            loading="eager"
+            decoding="async">
+        </div>
+        <div class="hero-grid__content">
+          <h1 id="hero-heading">Welcome to Game Boy Enthusiasts!</h1>
+          <p>This is a community for Game Boy enthusiasts and for newcomers alike. Connect with others while discovering new variants of the iconic handheld.</p>
+          <p><a href="database.html" class="btn">Explore the Database</a></p>
+        </div>
+      </section>
+
+      <section class="feature-grid" aria-label="Community highlights">
+        <article class="feature">
+          <h2>Collectors</h2>
+          <p>Share rare finds, condition grading tips, and preservation advice with fellow collectors.</p>
+        </article>
+        <article class="feature">
+          <h2>Variants</h2>
+          <p>Browse limited editions, regional releases, and special hardware variants in our database.</p>
+        </article>
+        <article class="feature">
+          <h2>Community</h2>
+          <p>Ask questions, trade knowledge, and keep the Game Boy spirit alive together.</p>
+        </article>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Game Boy Enthusiasts</p>
+    </div>
+  </footer>
+</body>
+</html>
